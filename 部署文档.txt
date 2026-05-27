@@ -1,0 +1,809 @@
+================================================================================
+                    家庭健康管理系统 — 部署文档
+================================================================================
+
+================================================================================
+
+
+一、系统概述
+================================================================================
+
+    本系统是一个基于 UniApp + Node.js 的家庭健康管理平台，支持 H5、微信小程序、
+    Android/iOS App 多端运行。主要功能包括：健康数据记录、健康档案管理、数据分析
+    与预警、健康知识推送、就医辅助（医院查询/挂号）、家庭共享等。
+
+    技术栈：
+    - 前端: UniApp (Vue 3) + Pinia + Vite + Sass
+    - 后端: Node.js + Express + MySQL + Redis
+    - 地图: 高德地图 JS API v1.4.15 (含IP定位/逆地理编码)
+    - AI:   DeepSeek 大语言模型 (个性化健康建议)
+    - 设备: 蓝牙低功耗 BLE (智能手表/手环数据采集)
+    - 文件上传: Multer
+    - 认证: JWT (JSON Web Token)
+
+
+二、环境要求
+================================================================================
+
+2.1 服务器环境要求
+--------------------------
+    操作系统:    Windows Server / Linux (推荐 Ubuntu 20.04+)
+    Node.js:     v16.0.0 及以上 (推荐 v18 LTS)
+    MySQL:       v5.7 及以上 (推荐 v8.0)
+    Redis:       v6.0 及以上 (可选，用于缓存)
+    磁盘空间:    至少 1GB (含上传文件存储)
+    内存:        至少 1GB
+
+2.2 开发环境要求
+--------------------------
+    Node.js:     v16.0.0 及以上
+    npm:         v8.0.0 及以上
+    MySQL:       v5.7 及以上
+    HBuilderX:   v4.0 及以上 (用于前端开发和真机调试)
+    IDE(可选):   VS Code / WebStorm
+
+2.3 端口使用
+--------------------------
+    后端服务:    3000 (可通过 .env 修改)
+    前端H5:      8080 (开发模式，可通过 manifest.json 修改)
+    MySQL:       3306 (默认)
+    Redis:       6379 (默认)
+
+
+三、项目目录结构
+================================================================================
+
+    健康管理系统/
+    ├── client/                          # 前端项目 (UniApp)
+    │   ├── pages/                       # 页面文件 (共34个页面)
+    │   │   ├── index/                   # 首页
+    │   │   ├── health/                  # 健康模块 (记录/分析/预警/添加)
+    │   │   ├── mine/                    # 我的 (个人信息/修改密码)
+    │   │   ├── member/                  # 成员管理 (列表/详情/添加)
+    │   │   ├── record/                  # 健康档案 (就医记录/体检报告)
+    │   │   ├── knowledge/               # 健康知识 (列表/详情/收藏)
+    │   │   ├── hospital/                # 医院 (列表/科室/医生)
+    │   │   ├── appointment/             # 挂号 (创建/列表/详情)
+    │   │   ├── family/                  # 家庭 (列表/成员/邀请/共享)
+    │   │   ├── device/                  # 设备 (列表/绑定)
+    │   │   ├── login/                   # 登录
+    │   │   └── register/                # 注册
+    │   ├── services/                    # API 服务层 (8个文件)
+    │   ├── stores/                      # Pinia 状态管理
+    │   ├── utils/                       # 工具函数 (request.js)
+    │   ├── static/                      # 静态资源 (图标/图片)
+    │   ├── pages.json                   # 页面路由配置
+    │   ├── manifest.json                # 应用配置
+    │   ├── vite.config.js               # Vite 构建配置
+    │   ├── App.vue                      # 根组件
+    │   ├── main.js                      # 入口文件
+    │   └── package.json                 # 前端依赖
+    │
+    ├── server/                          # 后端项目 (Node.js)
+    │   ├── routes/                      # API 路由 (10个文件)
+    │   │   ├── auth.js                  # 认证 (注册/登录/头像上传)
+    │   │   ├── member.js                # 成员管理
+    │   │   ├── health.js                # 健康数据
+    │   │   ├── record.js                # 就医记录/体检报告
+    │   │   ├── analysis.js              # 数据分析/预警
+    │   │   ├── knowledge.js             # 健康知识
+    │   │   ├── hospital.js              # 医院/科室/医生
+    │   │   ├── appointment.js           # 挂号预约
+    │   │   ├── family.js                # 家庭管理
+    │   │   └── device.js                # 设备管理
+    │   ├── middleware/                   # 中间件
+    │   │   ├── auth.js                  # JWT 认证中间件
+    │   │   └── upload.js                # 文件上传中间件 (Multer)
+    │   ├── config/                      # 配置
+    │   │   └── database.js              # 数据库连接池配置
+    │   ├── database/                    # 数据库脚本
+    │   │   └── init.sql                 # 初始化SQL (建表+模拟数据)
+    │   ├── uploads/                     # 文件上传目录 (运行时自动创建)
+    │   ├── app.js                       # 应用入口
+    │   ├── .env                         # 环境变量配置
+    │   └── package.json                 # 后端依赖
+    │
+    └── 需求文档                         # 项目需求说明
+
+
+四、数据库部署
+================================================================================
+
+4.1 安装 MySQL
+--------------------------
+    Windows:
+        1. 下载 MySQL Installer: https://dev.mysql.com/downloads/installer/
+        2. 选择 "Developer Default" 安装
+        3. 设置 root 密码（本项目默认密码为 root，生产环境请修改）
+        4. 完成安装后确认 MySQL 服务已启动
+
+    Linux (Ubuntu):
+        sudo apt update
+        sudo apt install mysql-server
+        sudo mysql_secure_installation
+        sudo systemctl start mysql
+        sudo systemctl enable mysql
+
+4.2 创建数据库并初始化
+--------------------------
+    方法一：命令行导入
+        
+        # 登录 MySQL
+        mysql -u root -p
+
+        # 执行初始化脚本（在 MySQL 命令行中）
+        source /path/to/健康管理系统/server/database/init.sql;
+
+    方法二：使用可视化工具
+        
+        1. 打开 Navicat / MySQL Workbench / phpMyAdmin 等工具
+        2. 连接到 MySQL 服务器 (host: localhost, port: 3306, user: root)
+        3. 打开文件: server/database/init.sql
+        4. 执行全部 SQL 语句
+
+4.3 数据库说明
+--------------------------
+    数据库名称: health_management
+    字符集:     utf8mb4 (支持中文和 emoji)
+    排序规则:   utf8mb4_unicode_ci
+
+    数据表清单（共15张表）:
+    ┌─────────────────────────┬────────────────────────────┐
+    │ 表名                    │ 说明                       │
+    ├─────────────────────────┼────────────────────────────┤
+    │ users                   │ 用户表                     │
+    │ families                │ 家庭表                     │
+    │ family_members          │ 家庭成员关联表             │
+    │ family_invitations      │ 家庭邀请表                 │
+    │ health_members          │ 健康成员档案表             │
+    │ health_data             │ 健康数据表                 │
+    │ health_alerts           │ 健康预警表                 │
+    │ medical_records         │ 就医记录表                 │
+    │ checkup_reports         │ 体检报告表                 │
+    │ hospitals               │ 医院表                     │
+    │ hospital_departments    │ 医院科室表                 │
+    │ doctors                 │ 医生表                     │
+    │ doctor_schedules        │ 医生排班表                 │
+    │ appointments            │ 挂号记录表                 │
+    │ health_knowledge        │ 健康知识表                 │
+    │ knowledge_favorites     │ 知识收藏表                 │
+    │ user_devices            │ 用户设备表                 │
+    └─────────────────────────┴────────────────────────────┘
+
+    初始化脚本会自动插入以下模拟数据:
+    - 5 家医院
+    - 12 个科室
+    - 9 名医生
+    - 未来7天的医生排班数据
+    - 10 篇健康知识文章
+
+
+五、后端部署
+================================================================================
+
+5.1 安装依赖
+--------------------------
+    cd server
+    npm install
+
+    安装的主要依赖包:
+    ┌──────────────────────┬─────────┬─────────────────────────────┐
+    │ 包名                 │ 版本    │ 用途                        │
+    ├──────────────────────┼─────────┼─────────────────────────────┤
+    │ express              │ ^4.18.2 │ Web 框架                    │
+    │ mysql2               │ ^3.6.0  │ MySQL 驱动 (Promise 版)     │
+    │ redis                │ ^4.6.7  │ Redis 客户端                │
+    │ jsonwebtoken         │ ^9.0.1  │ JWT 令牌生成和验证          │
+    │ bcryptjs             │ ^2.4.3  │ 密码加密                    │
+    │ cors                 │ ^2.8.5  │ 跨域请求支持                │
+    │ multer               │ ^1.4.5  │ 文件上传处理                │
+    │ dotenv               │ ^16.3.1 │ 环境变量加载                │
+    │ express-validator    │ ^7.0.1  │ 请求参数校验                │
+    │ node-schedule        │ ^2.1.1  │ 定时任务调度                │
+    │ nodemon (dev)        │ ^3.0.1  │ 开发热重载                  │
+    └──────────────────────┴─────────┴─────────────────────────────┘
+
+5.2 配置环境变量
+--------------------------
+    编辑 server/.env 文件，根据实际环境修改:
+
+    ┌──────────────────────────────────────────────────────────────┐
+    │ # 服务器配置                                                 │
+    │ PORT=3000                          # 后端端口号              │
+    │ NODE_ENV=development               # 运行环境                │
+    │                                    # (development/production)│
+    │                                                              │
+    │ # 数据库配置                                                 │
+    │ DB_HOST=localhost                  # MySQL 主机地址           │
+    │ DB_PORT=3306                       # MySQL 端口              │
+    │ DB_USER=root                       # MySQL 用户名            │
+    │ DB_PASSWORD=root                   # MySQL 密码              │
+    │ DB_NAME=health_management          # 数据库名                │
+    │                                                              │
+    │ # Redis配置                                                  │
+    │ REDIS_HOST=localhost               # Redis 主机地址          │
+    │ REDIS_PORT=6379                    # Redis 端口              │
+    │ REDIS_PASSWORD=                    # Redis 密码(无密码留空)  │
+    │                                                              │
+    │ # JWT配置                                                    │
+    │ JWT_SECRET=your_secret_key_here    # JWT 密钥(生产环境必改!) │
+    │ JWT_EXPIRES_IN=7d                  # JWT 过期时间            │
+    │                                                              │
+    │ # 高德地图API配置                                            │
+    │ AMAP_KEY=your_amap_key            # 高德地图 Web API Key     │
+    │                                                              │
+    │ # AI大模型配置（DeepSeek）                                    │
+    │ DEEPSEEK_API_KEY=sk-placeholder    # DeepSeek API密钥        │
+    │                                    # (申请: platform.deepseek │
+    │                                    #  .com，免费额度可用)     │
+    │ DEEPSEEK_BASE_URL=https://api.deepseek.com                   │
+    │                                    # DeepSeek API 地址       │
+    │                                                              │
+    │ # 文件上传配置                                               │
+    │ UPLOAD_PATH=./uploads              # 上传文件存储路径        │
+    │ MAX_FILE_SIZE=10485760             # 最大文件大小(10MB)      │
+    └──────────────────────────────────────────────────────────────┘
+
+    【重要】生产环境部署前必须修改以下配置:
+    * DB_PASSWORD      — 使用强密码
+    * JWT_SECRET       — 更换为随机强密钥
+    * NODE_ENV         — 设为 production
+    * DEEPSEEK_API_KEY — 替换为真实的 DeepSeek API 密钥
+                         (访问 https://platform.deepseek.com 申请)
+                         未配置时系统自动降级为本地规则推荐算法
+
+5.3 启动后端服务
+--------------------------
+    开发模式（支持热重载）:
+        cd server
+        npm run dev
+
+    生产模式:
+        cd server
+        npm start
+
+    启动成功后控制台输出:
+        服务器运行在端口 3000
+        数据库连接成功
+
+5.4 验证后端服务
+--------------------------
+    在浏览器中访问以下地址测试:
+
+    http://localhost:3000/api/knowledge
+    
+    如果返回 JSON 数据（包含健康知识文章列表），说明后端运行正常。
+
+5.5 API 路由一览
+--------------------------
+    ┌───────────────────────────────┬────────────────────────────────┐
+    │ 路由前缀                      │ 功能模块                       │
+    ├───────────────────────────────┼────────────────────────────────┤
+    │ /api/auth                     │ 用户认证 (注册/登录/头像上传)  │
+    │ /api/member                   │ 成员管理 (CRUD)                │
+    │ /api/health                   │ 健康数据 (录入/查询/删除)      │
+    │ /api/record                   │ 就医记录+体检报告              │
+    │ /api/analysis                 │ 数据分析 (统计/趋势/预警/报告) │
+    │ /api/knowledge                │ 健康知识 (列表/详情/收藏)      │
+    │ /api/knowledge/ai/advice      │ AI智能健康建议 (DeepSeek)      │
+    │ /api/hospital                 │ 医院 (查询/科室/医生/排班)     │
+    │ /api/hospital/location/ip     │ IP定位 (高德API定位回退)       │
+    │ /api/appointment              │ 挂号预约 (创建/查询/取消)      │
+    │ /api/family                   │ 家庭管理 (创建/邀请/共享)      │
+    │ /api/device                   │ 设备管理 (绑定/同步/解绑)      │
+    └───────────────────────────────┴────────────────────────────────┘
+
+    静态文件服务: /uploads  →  server/uploads/ 目录
+
+
+六、前端部署
+================================================================================
+
+6.1 安装依赖
+--------------------------
+    cd client
+    npm install
+
+    安装的主要依赖包:
+    ┌──────────────────────────────┬──────────────┬──────────────────┐
+    │ 包名                         │ 版本         │ 用途             │
+    ├──────────────────────────────┼──────────────┼──────────────────┤
+    │ @dcloudio/uni-app            │ 3.0.0-alpha  │ UniApp 核心框架  │
+    │ vue                          │ ^3.4.21      │ Vue 3 框架       │
+    │ pinia                        │ ^2.3.1       │ 状态管理         │
+    │ echarts                      │ ^5.4.3       │ 图表库           │
+    │ dayjs                        │ ^1.11.9      │ 日期处理         │
+    │ sass (dev)                   │ ^1.69.5      │ CSS 预处理器     │
+    │ vite (dev)                   │ ^5.2.0       │ 构建工具         │
+    └──────────────────────────────┴──────────────┴──────────────────┘
+
+6.2 配置后端接口地址
+--------------------------
+    文件位置: client/utils/request.js
+
+    修改第1行的 BASE_URL 为实际后端地址:
+
+        开发环境:
+            const BASE_URL = 'http://localhost:3000/api'
+            const SERVER_URL = 'http://localhost:3000'
+
+        局域网测试 (手机真机调试):
+            const BASE_URL = 'http://192.168.x.x:3000/api'
+            const SERVER_URL = 'http://192.168.x.x:3000'
+            (将 192.168.x.x 替换为电脑的局域网 IP 地址)
+
+        生产环境:
+            const BASE_URL = 'https://your-domain.com/api'
+            const SERVER_URL = 'https://your-domain.com'
+
+6.3 H5 模式运行（浏览器）
+--------------------------
+    方法一：命令行
+        cd client
+        npm run dev:h5
+
+        启动后访问: http://localhost:8080
+
+    方法二：HBuilderX
+        1. 用 HBuilderX 打开 client 目录
+        2. 菜单 → 运行 → 运行到浏览器 → Chrome
+        3. 自动打开浏览器预览
+
+6.4 微信小程序模式运行
+--------------------------
+    1. 构建小程序代码:
+        cd client
+        npm run dev:mp-weixin       # 开发模式
+        npm run build:mp-weixin     # 生产构建
+
+    2. 打开微信开发者工具
+    3. 导入项目，项目目录选择: client/dist/dev/mp-weixin
+    4. 在 manifest.json 中配置真实的微信小程序 AppID:
+       "mp-weixin": {
+           "appid": "你的真实AppID"
+       }
+    5. 注意：需要在微信公众平台配置合法域名
+
+    微信小程序域名配置:
+        request 合法域名:  https://your-domain.com
+        uploadFile 合法域名: https://your-domain.com
+
+6.5 App 模式打包 (Android APK) — HBuilderX 云打包详细教程
+--------------------------
+
+    ⚠️ 注意：HBuilderX 目前仅支持云打包方式生成 APK，不支持本地离线打包。
+
+    【前置条件】
+    - 已安装 HBuilderX v4.0 以上版本（官网：https://www.dcloud.io/hbuilderx.html）
+    - 已注册 DCloud 开发者账号（https://dev.dcloud.net.cn）
+    - 后端服务已部署到可访问的服务器（不能用 localhost）
+    - 需要联网（云打包需要上传代码到 DCloud 服务器编译）
+
+    ========================================
+    第一步：修改后端接口地址（重要！）
+    ========================================
+    
+    App 不走开发代理，必须使用真实 IP/域名。
+    
+    打开文件: client/utils/request.js
+    修改前两行为后端服务器的实际地址:
+
+        // 局域网测试（手机和电脑在同一 WiFi 下）
+        const BASE_URL = 'http://192.168.x.x:3000/api'
+        const SERVER_URL = 'http://192.168.x.x:3000'
+
+        // 如果后端部署到公网服务器
+        const BASE_URL = 'http://你的服务器IP:3000/api'
+        const SERVER_URL = 'http://你的服务器IP:3000'
+
+    ⚠️ 查看电脑局域网 IP 的方法:
+        Windows: 打开 cmd → 输入 ipconfig → 找到 IPv4 地址
+        例如: 192.168.1.100
+
+    ========================================
+    第二步：用 HBuilderX 打开项目
+    ========================================
+    
+    1. 打开 HBuilderX
+    2. 菜单栏 → 文件 → 打开目录
+    3. 选择 client 文件夹（不是整个项目根目录！）
+    4. 项目会出现在左侧项目管理器中
+
+    ========================================
+    第三步：配置 manifest.json（应用信息）
+    ========================================
+    
+    在 HBuilderX 中双击打开 manifest.json，会看到可视化配置界面：
+
+    【基础配置】
+    - 应用名称: 家庭健康管理（已配置好）
+    - 应用版本: 1.0.0（已配置好）
+    - uni-app应用标识: 点击"重新获取"获取正式 AppID
+      （需要登录 DCloud 账号）
+
+    【App图标配置】（可选）
+    - 点击"App图标配置"标签
+    - 上传一张 1024×1024 的应用图标图片
+    - 点击"自动生成所有图标并替换"
+
+    【App启动界面配置】（可选）
+    - 点击"App启动界面配置"标签
+    - 可上传自定义启动图或使用默认
+
+    【App模块配置】
+    - 已配置好所需权限（网络、相机、存储、定位）
+    - 无需额外修改
+
+    ========================================
+    第四步：编译运行到手机（可选，用于测试）
+    ========================================
+    
+    方法A - 真机USB调试:
+        1. 手机开启"开发者模式"和"USB调试"
+           （设置 → 关于手机 → 连续点击"版本号"7次 → 返回设置 →
+             开发者选项 → 打开USB调试）
+        2. 用USB线连接手机和电脑
+        3. HBuilderX 菜单 → 运行 → 运行到手机或模拟器
+        4. 选择你的手机设备
+        5. 等待编译完成，App 会自动安装到手机上
+
+    方法B - 内置浏览器预览:
+        1. HBuilderX 菜单 → 运行 → 运行到内置浏览器
+        2. 在内置浏览器中预览效果
+
+    ========================================
+    第五步：云打包生成 APK
+    ========================================
+    
+    1. HBuilderX 菜单 → 发行 → 原生App-云打包
+    
+    2. 在弹出的打包界面中配置:
+       ┌───────────────────────────────────────────────┐
+       │ Android 包名: com.health.family               │
+       │ （格式: com.公司名.应用名，可自定义）          │
+       │                                               │
+       │ 证书选择: ☑ 使用公共测试证书                   │
+       │ （仅用于测试和毕设演示，正式发布需自有证书）    │
+       │                                               │
+       │ ☑ 传统打包（不勾选"快应用"）                   │
+       └───────────────────────────────────────────────┘
+
+    3. 点击【打包】按钮
+
+    4. 等待云端编译（通常需要 5-15 分钟）
+       - 打包状态会在 HBuilderX 控制台中显示
+       - 完成后会提示"打包成功"
+
+    5. 打包完成后，点击控制台中的下载链接
+       - 下载得到 .apk 文件（例如: __UNI__HEALTH_20260321.apk）
+       - 将 APK 传到手机上安装即可
+
+    ========================================
+    第六步：安装 APK 到手机
+    ========================================
+    
+    1. 将下载的 .apk 文件传到手机（微信/QQ发送、数据线拷贝等）
+    2. 手机上点击 APK 文件开始安装
+    3. 如果提示"不允许安装未知来源应用":
+       设置 → 安全 → 允许安装未知来源应用 → 选择文件管理器 → 允许
+    4. 安装完成后，在手机桌面找到"家庭健康管理"图标
+    5. 打开 App，确保后端服务正在运行
+
+    ========================================
+    常见问题
+    ========================================
+    
+    Q: 打包报错 "AppID 不正确"
+    A: 在 manifest.json 可视化配置中点击"重新获取"，
+       需要先登录 DCloud 账号
+
+    Q: App 打开后无法获取数据
+    A: 检查 request.js 中的 BASE_URL 是否改成了真实 IP，
+       不能用 localhost。确保手机能访问该 IP 和端口
+
+    Q: App 显示"网络错误"
+    A: 1) 确认后端服务正在运行
+       2) 确认手机和服务器在同一网络
+       3) 如果用公网IP，检查服务器防火墙是否开放 3000 端口
+
+    Q: 想正式发布到应用市场
+    A: 需要自有证书（不能用测试证书），步骤:
+       1) 在打包界面选择"使用自有证书"
+       2) 生成 Android 签名证书（.keystore 文件）
+       3) 填写证书别名和密码
+       4) 重新打包
+
+6.6 H5 生产构建
+--------------------------
+    cd client
+    npm run build:h5
+
+    构建产物输出到: client/dist/build/h5/
+    将该目录下的文件部署到 Web 服务器 (Nginx/Apache) 即可。
+
+
+七、生产环境部署方案
+================================================================================
+
+7.1 推荐架构
+--------------------------
+
+    ┌──────────┐     ┌───────────┐     ┌──────────┐     ┌─────────┐
+    │  客户端  │────→│  Nginx    │────→│ Node.js  │────→│  MySQL  │
+    │ (浏览器/ │     │ (反向代理 │     │ (Express │     │         │
+    │  小程序/ │     │  + 静态   │     │  port    │     │         │
+    │  App)    │     │  资源)    │     │  3000)   │     │         │
+    └──────────┘     └───────────┘     └──────────┘     └─────────┘
+
+7.2 Nginx 配置示例
+--------------------------
+    server {
+        listen 80;
+        server_name your-domain.com;
+
+        # 前端 H5 静态资源
+        location / {
+            root /var/www/health-management/client/dist/build/h5;
+            try_files $uri $uri/ /index.html;
+        }
+
+        # 后端 API 反向代理
+        location /api {
+            proxy_pass http://127.0.0.1:3000;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+
+        # 上传文件静态服务
+        location /uploads {
+            proxy_pass http://127.0.0.1:3000;
+        }
+
+        # 文件上传大小限制
+        client_max_body_size 10m;
+    }
+
+7.3 使用 PM2 管理 Node.js 进程
+--------------------------
+    安装 PM2:
+        npm install -g pm2
+
+    启动应用:
+        cd server
+        pm2 start app.js --name health-server
+
+    常用 PM2 命令:
+        pm2 list                     # 查看进程列表
+        pm2 restart health-server    # 重启
+        pm2 stop health-server       # 停止
+        pm2 logs health-server       # 查看日志
+        pm2 monit                    # 监控面板
+        pm2 save                     # 保存进程列表
+        pm2 startup                  # 设置开机自启
+
+7.4 HTTPS 配置 (推荐)
+--------------------------
+    使用 Let's Encrypt 免费 SSL 证书:
+        
+        sudo apt install certbot python3-certbot-nginx
+        sudo certbot --nginx -d your-domain.com
+        sudo certbot renew --dry-run    # 测试自动续期
+
+7.5 数据库安全
+--------------------------
+    1. 修改 MySQL root 密码为强密码
+    2. 创建专用数据库用户，仅授予必要权限:
+       
+       CREATE USER 'health_user'@'localhost' IDENTIFIED BY 'StrongPassword123!';
+       GRANT SELECT, INSERT, UPDATE, DELETE ON health_management.* TO 'health_user'@'localhost';
+       FLUSH PRIVILEGES;
+
+    3. 定期备份数据库:
+       mysqldump -u root -p health_management > backup_$(date +%Y%m%d).sql
+
+    4. 设置定时备份 (crontab):
+       0 2 * * * mysqldump -u root -pYourPassword health_management > /backup/health_$(date +\%Y\%m\%d).sql
+
+
+八、高德地图配置
+================================================================================
+
+8.1 申请 API Key
+--------------------------
+    1. 访问高德开放平台: https://lbs.amap.com
+    2. 注册/登录账号
+    3. 进入控制台 → 应用管理 → 创建新应用
+    4. 添加 Key:
+       - 服务平台选择 "Web端(JS API)"
+       - 如需后端调用，额外添加 "Web服务" 类型的 Key
+    5. 将获取的 Key 填入:
+       - 后端: server/.env 中的 AMAP_KEY
+       - 前端: client/pages/hospital/list.vue 中的 JS API 引用
+
+8.2 安全配置
+--------------------------
+    在高德控制台中配置 Key 的安全限制:
+    - 设置 HTTP Referer 白名单 (针对 JS API Key)
+    - 设置 IP 白名单 (针对 Web 服务 Key)
+    - 限制每日调用量
+
+
+九、常见问题排查
+================================================================================
+
+9.1 后端启动失败: "数据库连接失败"
+--------------------------
+    原因: MySQL 未启动或连接配置错误
+    解决:
+    1. 确认 MySQL 服务已启动
+       Windows: 服务管理器 → 找到 MySQL → 启动
+       Linux:   sudo systemctl start mysql
+    2. 检查 server/.env 中的数据库配置是否正确
+    3. 确认已执行 init.sql 创建了 health_management 数据库
+    4. 测试数据库连接:
+       mysql -u root -p -h localhost
+
+9.2 前端页面空白 / 接口报错
+--------------------------
+    原因: 后端未启动或地址配置错误
+    解决:
+    1. 确认后端已启动并监听端口 3000
+    2. 检查 client/utils/request.js 中的 BASE_URL 地址
+    3. 真机调试时不能使用 localhost，需使用电脑局域网 IP
+    4. 检查浏览器控制台的网络请求是否有 CORS 错误
+
+9.3 头像/图片无法显示
+--------------------------
+    原因: 文件 URL 未拼接服务器地址
+    解决:
+    1. 确认 client/utils/request.js 中的 SERVER_URL 配置正确
+    2. 确认后端 uploads 目录存在且有读写权限
+    3. 确认 Nginx 配置中 /uploads 路径已正确代理
+
+9.4 高德地图不显示
+--------------------------
+    原因: API Key 无效或安全域名未配置
+    解决:
+    1. 确认高德地图 Key 有效且未过期
+    2. 在高德控制台添加当前域名到白名单
+    3. H5 模式需要 HTTPS 才能使用定位功能
+
+9.5 微信小程序请求失败
+--------------------------
+    原因: 域名未在微信公众平台配置
+    解决:
+    1. 登录微信公众平台 → 开发 → 开发设置
+    2. 在 "服务器域名" 中添加后端域名 (必须 HTTPS)
+    3. 开发阶段可在微信开发者工具中勾选 "不校验合法域名"
+
+9.6 文件上传失败
+--------------------------
+    原因: 文件类型或大小限制
+    解决:
+    1. 支持的文件类型: JPEG, PNG, GIF, PDF, DOC, DOCX
+    2. 单文件最大: 10MB (可在 .env 中修改 MAX_FILE_SIZE)
+    3. 确认 uploads 目录有写入权限:
+       Linux: chmod 755 server/uploads
+
+9.7 排班数据过期
+--------------------------
+    原因: init.sql 中的排班数据基于初始化日期生成未来7天
+    解决: 重新执行以下 SQL 刷新排班数据:
+       DELETE FROM doctor_schedules;
+       INSERT INTO doctor_schedules (doctor_id, schedule_date, time_slot, total, remaining, price)
+       SELECT d.id, DATE_ADD(CURDATE(), INTERVAL n.n DAY), t.slot, 20, 20,
+              CASE d.title WHEN '主任医师' THEN 50.00 WHEN '副主任医师' THEN 30.00 ELSE 15.00 END
+       FROM doctors d
+       CROSS JOIN (SELECT 0 n UNION SELECT 1 UNION SELECT 2 UNION SELECT 3
+                   UNION SELECT 4 UNION SELECT 5 UNION SELECT 6) n
+       CROSS JOIN (SELECT 'morning' slot UNION SELECT 'afternoon') t
+       WHERE d.status = 1;
+
+
+十、新增核心功能说明
+================================================================================
+
+10.1 AI 智能健康建议 (DeepSeek 大模型)
+--------------------------
+    功能描述:
+        系统集成 DeepSeek 大语言模型，根据用户的健康数据（血压、血糖、心率、
+        体重等）自动生成个性化健康建议，涵盖饮食、运动、生活习惯、医疗提醒
+        四个维度。
+
+    工作流程:
+        1. 前端首页自动调用 /api/knowledge/ai/advice/:memberId
+        2. 后端收集该成员的健康档案和最近健康数据
+        3. 构造专业健康助手提示词，调用 DeepSeek API
+        4. AI 返回结构化 JSON 建议（overall/diet/exercise/lifestyle/medical）
+        5. 前端展示 "AI 智能健康建议" 卡片，支持手动刷新
+
+    降级策略:
+        - 若 DEEPSEEK_API_KEY 未配置或为 sk-placeholder → 自动使用本地规则算法
+        - 若 AI 接口调用失败（超时/网络错误）→ 自动回退本地规则算法
+        - 前端 source 字段区分: "ai" = DeepSeek 生成, "local" = 本地算法
+
+    配置步骤:
+        1. 访问 https://platform.deepseek.com 注册账号
+        2. 创建 API Key（新用户有免费额度）
+        3. 将 API Key 填入 server/.env 的 DEEPSEEK_API_KEY 字段
+        4. 重启后端服务即可生效
+
+10.2 智能设备蓝牙 BLE 连接
+--------------------------
+    功能描述:
+        支持通过蓝牙低功耗（BLE）协议扫描并连接附近的智能手表/手环设备，
+        实时获取心率、血压等健康数据。
+
+    支持的标准 BLE 健康服务:
+        - 心率服务:        UUID 0x180D
+        - 血压服务:        UUID 0x1810
+        - 健康温度服务:    UUID 0x1809
+        - 体重秤服务:      UUID 0x181D
+        - 血氧服务:        UUID 0x1822
+
+    使用流程:
+        1. 设备绑定页 → 选择"蓝牙扫描"模式
+        2. 点击"开始扫描附近设备" → 发现附近 BLE 设备
+        3. 选择目标设备 → 自动连接并发现服务/特征值
+        4. 绑定完成后，设备列表页可通过"同步"按钮直连蓝牙读取数据
+
+    运行环境要求:
+        - Android App:  需授予蓝牙和定位权限（Android 12+ 需 BLUETOOTH_SCAN）
+        - iOS App:      需在 Info.plist 添加蓝牙使用说明
+        - H5 模式:      仅 Chrome 等支持 Web Bluetooth API 的浏览器可用
+        - 微信小程序:   需在 app.json 中声明蓝牙权限
+
+    注意事项:
+        - 蓝牙连接失败时自动回退至云端同步（模拟数据）
+        - 真机调试时蓝牙功能正常；模拟器不支持蓝牙
+
+10.3 多级定位回退机制
+--------------------------
+    功能描述:
+        医院查询页面采用三级定位回退策略，确保在不同运行环境下均能获取
+        用户位置：
+
+    定位优先级:
+        第一级: GPS 定位 (uni.getLocation / 高德 JS SDK / 浏览器 Geolocation)
+        第二级: IP 定位 (后端 /api/hospital/location/ip → 高德 IP 定位 API)
+        第三级: 默认坐标 (经纬度 0,0 + 提示用户手动选择)
+
+    适用场景:
+        - App 端: GPS 定位优先，精度最高
+        - H5 端: 浏览器定位需 HTTPS；无 HTTPS 时自动降级 IP 定位
+        - 微信小程序: 使用 uni.getLocation 获取微信授权位置
+
+
+十一、快速部署检查清单
+================================================================================
+
+    以下是完整部署的检查步骤，逐项确认打勾:
+
+    [ ] 1.  安装 Node.js (v16+)
+    [ ] 2.  安装 MySQL (v5.7+) 并启动服务
+    [ ] 3.  执行 server/database/init.sql 初始化数据库
+    [ ] 4.  进入 server 目录，执行 npm install
+    [ ] 5.  编辑 server/.env，配置数据库密码和其他参数
+    [ ] 6.  配置 DEEPSEEK_API_KEY (AI健康建议功能所需，可选)
+    [ ] 7.  启动后端: npm start（看到"数据库连接成功"即可）
+    [ ] 8.  进入 client 目录，执行 npm install
+    [ ] 9.  编辑 client/utils/request.js 中的 BASE_URL 和 SERVER_URL
+    [ ] 10. 启动前端: npm run dev:h5 或通过 HBuilderX 运行
+    [ ] 11. 浏览器访问 http://localhost:8080 验证系统运行正常
+    [ ] 12. 注册测试账号，验证各模块功能
+    [ ] 13. 验证首页 AI 健康建议卡片正常显示
+    [ ] 14. (App真机) 验证蓝牙设备扫描和连接功能
+    [ ] 15. 验证医院页面定位功能（GPS → IP定位 → 默认回退）
+    [ ] 16. (生产环境) 配置 Nginx 反向代理
+    [ ] 17. (生产环境) 使用 PM2 管理 Node.js 进程
+    [ ] 18. (生产环境) 配置 HTTPS（蓝牙和定位功能在H5需要HTTPS）
+    [ ] 19. (生产环境) 修改 JWT_SECRET 为强密钥
+    [ ] 20. (生产环境) 创建专用数据库用户
+    [ ] 21. (生产环境) 配置数据库定时备份
+
+
+================================================================================
+                             
+================================================================================

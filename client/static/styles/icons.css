@@ -1,0 +1,56 @@
+.iconfont {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  vertical-align: middle;
+}
+
+.icon-user { background-image: url('/static/icons/user.svg'); }
+.icon-lock { background-image: url('/static/icons/lock.svg'); }
+.icon-bell { background-image: url('/static/icons/bell.svg'); }
+.icon-right { background-image: url('/static/icons/right.svg'); }
+.icon-down { background-image: url('/static/icons/down.svg'); }
+.icon-plus { background-image: url('/static/icons/plus.svg'); }
+.icon-edit { background-image: url('/static/icons/edit.svg'); }
+.icon-chart { background-image: url('/static/icons/chart.svg'); }
+.icon-hospital { background-image: url('/static/icons/hospital.svg'); }
+.icon-device { background-image: url('/static/icons/device.svg'); }
+.icon-heart { background-image: url('/static/icons/heart.svg'); }
+.icon-droplet { background-image: url('/static/icons/droplet.svg'); }
+.icon-weight { background-image: url('/static/icons/weight.svg'); }
+.icon-height { background-image: url('/static/icons/height.svg'); }
+.icon-pulse { background-image: url('/static/icons/pulse.svg'); }
+.icon-walk { background-image: url('/static/icons/walk.svg'); }
+.icon-moon { background-image: url('/static/icons/moon.svg'); }
+.icon-search { background-image: url('/static/icons/search.svg'); }
+.icon-location { background-image: url('/static/icons/location.svg'); }
+.icon-phone { background-image: url('/static/icons/phone.svg'); }
+.icon-calendar { background-image: url('/static/icons/calendar.svg'); }
+.icon-list { background-image: url('/static/icons/list.svg'); }
+.icon-check { background-image: url('/static/icons/check.svg'); }
+.icon-clock { background-image: url('/static/icons/clock.svg'); }
+.icon-check-circle { background-image: url('/static/icons/check-circle.svg'); }
+.icon-close { background-image: url('/static/icons/close.svg'); }
+.icon-warning { background-image: url('/static/icons/warning.svg'); }
+.icon-danger { background-image: url('/static/icons/danger.svg'); }
+.icon-info { background-image: url('/static/icons/info.svg'); }
+.icon-users { background-image: url('/static/icons/users.svg'); }
+.icon-home { background-image: url('/static/icons/home.svg'); }
+.icon-add-user { background-image: url('/static/icons/add-user.svg'); }
+.icon-share { background-image: url('/static/icons/share.svg'); }
+.icon-mail { background-image: url('/static/icons/mail.svg'); }
+.icon-star { background-image: url('/static/icons/star.svg'); }
+.icon-star-fill { background-image: url('/static/icons/star-fill.svg'); }
+.icon-file { background-image: url('/static/icons/file.svg'); }
+.icon-upload { background-image: url('/static/icons/upload.svg'); }
+.icon-watch { background-image: url('/static/icons/watch.svg'); }
+.icon-scale { background-image: url('/static/icons/scale.svg'); }
+.icon-thermometer { background-image: url('/static/icons/thermometer.svg'); }
+.icon-report { background-image: url('/static/icons/report.svg'); }
+.icon-health { background-image: url('/static/icons/health.svg'); }
+.icon-medical { background-image: url('/static/icons/medical.svg'); }
+.icon-male { background-image: url('/static/icons/male.svg'); }
+.icon-female { background-image: url('/static/icons/female.svg'); }

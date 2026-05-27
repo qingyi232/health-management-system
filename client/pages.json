@@ -1,0 +1,256 @@
+{
+  "pages": [
+    {
+      "path": "pages/index/index",
+      "style": {
+        "navigationBarTitleText": "首页",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/login/login",
+      "style": {
+        "navigationBarTitleText": "登录",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/register/register",
+      "style": {
+        "navigationBarTitleText": "注册"
+      }
+    },
+    {
+      "path": "pages/member/list",
+      "style": {
+        "navigationBarTitleText": "家庭成员"
+      }
+    },
+    {
+      "path": "pages/member/add",
+      "style": {
+        "navigationBarTitleText": "添加成员"
+      }
+    },
+    {
+      "path": "pages/member/detail",
+      "style": {
+        "navigationBarTitleText": "成员详情"
+      }
+    },
+    {
+      "path": "pages/health/record",
+      "style": {
+        "navigationBarTitleText": "健康记录"
+      }
+    },
+    {
+      "path": "pages/health/add",
+      "style": {
+        "navigationBarTitleText": "添加记录"
+      }
+    },
+    {
+      "path": "pages/health/analysis",
+      "style": {
+        "navigationBarTitleText": "数据分析"
+      }
+    },
+    {
+      "path": "pages/health/alerts",
+      "style": {
+        "navigationBarTitleText": "健康预警"
+      }
+    },
+    {
+      "path": "pages/record/medical",
+      "style": {
+        "navigationBarTitleText": "就医记录"
+      }
+    },
+    {
+      "path": "pages/record/add-medical",
+      "style": {
+        "navigationBarTitleText": "添加就医记录"
+      }
+    },
+    {
+      "path": "pages/record/checkup",
+      "style": {
+        "navigationBarTitleText": "体检报告"
+      }
+    },
+    {
+      "path": "pages/record/add-checkup",
+      "style": {
+        "navigationBarTitleText": "上传体检报告"
+      }
+    },
+    {
+      "path": "pages/knowledge/list",
+      "style": {
+        "navigationBarTitleText": "健康知识"
+      }
+    },
+    {
+      "path": "pages/knowledge/detail",
+      "style": {
+        "navigationBarTitleText": "文章详情"
+      }
+    },
+    {
+      "path": "pages/knowledge/favorites",
+      "style": {
+        "navigationBarTitleText": "我的收藏"
+      }
+    },
+    {
+      "path": "pages/hospital/list",
+      "style": {
+        "navigationBarTitleText": "医院查询"
+      }
+    },
+    {
+      "path": "pages/hospital/detail",
+      "style": {
+        "navigationBarTitleText": "医院详情"
+      }
+    },
+    {
+      "path": "pages/hospital/doctors",
+      "style": {
+        "navigationBarTitleText": "医生列表"
+      }
+    },
+    {
+      "path": "pages/hospital/doctor-detail",
+      "style": {
+        "navigationBarTitleText": "医生详情"
+      }
+    },
+    {
+      "path": "pages/appointment/create",
+      "style": {
+        "navigationBarTitleText": "预约挂号"
+      }
+    },
+    {
+      "path": "pages/appointment/list",
+      "style": {
+        "navigationBarTitleText": "挂号记录"
+      }
+    },
+    {
+      "path": "pages/appointment/detail",
+      "style": {
+        "navigationBarTitleText": "挂号详情"
+      }
+    },
+    {
+      "path": "pages/family/list",
+      "style": {
+        "navigationBarTitleText": "家庭管理"
+      }
+    },
+    {
+      "path": "pages/family/members",
+      "style": {
+        "navigationBarTitleText": "家庭成员"
+      }
+    },
+    {
+      "path": "pages/family/invite",
+      "style": {
+        "navigationBarTitleText": "邀请成员"
+      }
+    },
+    {
+      "path": "pages/family/invitations",
+      "style": {
+        "navigationBarTitleText": "我的邀请"
+      }
+    },
+    {
+      "path": "pages/family/shared-health",
+      "style": {
+        "navigationBarTitleText": "健康数据共享"
+      }
+    },
+    {
+      "path": "pages/device/list",
+      "style": {
+        "navigationBarTitleText": "我的设备"
+      }
+    },
+    {
+      "path": "pages/device/bind",
+      "style": {
+        "navigationBarTitleText": "绑定设备"
+      }
+    },
+    {
+      "path": "pages/mine/index",
+      "style": {
+        "navigationBarTitleText": "我的"
+      }
+    },
+    {
+      "path": "pages/mine/profile",
+      "style": {
+        "navigationBarTitleText": "个人信息"
+      }
+    },
+    {
+      "path": "pages/mine/password",
+      "style": {
+        "navigationBarTitleText": "修改密码"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "家庭健康管理",
+    "navigationBarBackgroundColor": "#FFFFFF",
+    "backgroundColor": "#F5F5F5"
+  },
+  "tabBar": {
+    "color": "#999999",
+    "selectedColor": "#4CAF50",
+    "borderStyle": "black",
+    "backgroundColor": "#ffffff",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "iconPath": "static/tabbar/home.png",
+        "selectedIconPath": "static/tabbar/home-active.png",
+        "text": "首页"
+      },
+      {
+        "pagePath": "pages/health/record",
+        "iconPath": "static/tabbar/health.png",
+        "selectedIconPath": "static/tabbar/health-active.png",
+        "text": "健康"
+      },
+      {
+        "pagePath": "pages/hospital/list",
+        "iconPath": "static/tabbar/hospital.png",
+        "selectedIconPath": "static/tabbar/hospital-active.png",
+        "text": "就医"
+      },
+      {
+        "pagePath": "pages/mine/index",
+        "iconPath": "static/tabbar/mine.png",
+        "selectedIconPath": "static/tabbar/mine-active.png",
+        "text": "我的"
+      }
+    ]
+  },
+  "mp-weixin": {
+    "permission": {
+      "scope.userLocation": {
+        "desc": "用于查找附近医院和显示位置信息"
+      }
+    },
+    "requiredPrivateInfos": ["getLocation"]
+  }
+}
